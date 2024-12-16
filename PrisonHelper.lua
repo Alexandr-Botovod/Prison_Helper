@@ -3,14 +3,13 @@
 script_name("Prison Helper")
 script_description('Скрипт для Тюрьмы Строгого Режима LV')
 script_author("MTG MODS")
-script_version("0.3.11.1")
+script_version("0.3.10.0")
 
 require('lib.moonloader')
 require('encoding').default = 'CP1251'
 local u8 = require('encoding').UTF8
 local ffi = require('ffi')
 local sampev = require('samp.events')
-local cjson = require "cjson" -- Подключение библиотеки cjson
 function isMonetLoader() return MONET_VERSION ~= nil end
 
 -------------------------------------------- JSON SETTINGS ---------------------------------------------
@@ -112,6 +111,7 @@ local default_settings = {
 			"[SFPD]",
 			"[LVPD]",
 			"[RCSD]",
+			"[LSSD]",
 			"[SWAT]",
 			"[FBI]",
 			'skip',
@@ -1359,27 +1359,36 @@ function find_and_use_command(cmd, cmd_arg)
 	local all_commands = {}
 
 	-- Объединяем все команды в один список
+	--print("Объединение всех команд в один список...") -- Отладочная информация
 	for _, command in ipairs(commands.commands) do
+		--	print("Добавление команды из commands: " .. command.text) -- Отладочная информация
 		table.insert(all_commands, command)
 	end
 	for _, command in ipairs(commands.commands_manage) do
+		--	print("Добавление команды из commands_manage: " .. command.text) -- Отладочная информация
 		table.insert(all_commands, command)
 	end
 	for _, command in ipairs(commands.commands_senior_staff) do
+		--	print("Добавление команды из commands_senior_staff: " .. command.text) -- Отладочная информация
 		table.insert(all_commands, command)
 	end
 
 	-- Ищем команду среди всех
+	--print("Поиск команды: " .. cmd) -- Отладочная информация
 	for _, command in ipairs(all_commands) do
 		if command.enable and command.text:find(cmd) then
+			--		print("Найдена команда: " .. command.cmd) -- Отладочная информация
 			check = true
 			sampProcessChatInput("/" .. command.cmd .. " " .. cmd_arg)
 			return
+			--	else
+			--		print("Команда не подошла: " .. command.text) -- Отладочная информация
 		end
 	end
 
 	-- Если команда не найдена
 	if not check then
+		--print("Команда не найдена!") -- Отладочная информация
 		sampAddChatMessage('[Prison Helper] {ffffff}Ошибка, не могу найти бинд для выполнения этой команды!',
 			message_color)
 		play_error_sound()
@@ -2132,48 +2141,37 @@ local rpTake = {
 	[89] = 4, -- кобура
 }
 for id, weapon in pairs(weapons.names) do
-	-- Получаем значение пола игрока, если оно не задано, то считаем его "Неизвестно"
-	local sex = settings.player_info.sex or "Неизвестно"
-
-	-- Обработка действия для gunOn
-	if (id == 3 or (id > 15 and id < 19) or (id == 90 or id == 91)) then
-		-- Если пол "Мужчина" или не задан, используем мужской род
-		if sex == "Мужчина" or sex == "Неизвестно" then
+	if (id == 3 or (id > 15 and id < 19) or (id == 90 or id == 91)) then -- 3 16 17 18 (for gunOn)
+		if settings.player_info.sex == "Мужчина" or settings.player_info.sex then
 			gunOn[id] = 'снял'
-			-- Если пол "Женщина", используем женский род
-		elseif sex == "Женщина" then
+		elseif settings.player_info.sex == "Женщина" then
 			gunOn[id] = 'снялa'
 		end
 	else
-		if sex == "Мужчина" or sex == "Неизвестно" then
+		if settings.player_info.sex == "Мужчина" or settings.player_info.sex == "Неизвестно" then
 			gunOn[id] = 'достал'
-		elseif sex == "Женщина" then
+		elseif settings.player_info.sex == "Женщина" then
 			gunOn[id] = 'досталa'
 		end
 	end
-
-	-- Обработка действия для gunOff
-	if (id == 3 or (id > 15 and id < 19) or (id > 38 and id < 41) or (id == 90 or id == 91)) then
-		if sex == "Мужчина" or sex == "Неизвестно" then
+	if (id == 3 or (id > 15 and id < 19) or (id > 38 and id < 41) or (id == 90 or id == 91)) then -- 3 16 17 18 39 40 (for gunOff)
+		if settings.player_info.sex == "Мужчина" or settings.player_info.sex == "Неизвестно" then
 			gunOff[id] = 'повесил'
-		elseif sex == "Женщина" then
+		elseif settings.player_info.sex == "Женщина" then
 			gunOff[id] = 'повесилa'
 		end
 	else
-		if sex == "Мужчина" or sex == "Неизвестно" then
+		if settings.player_info.sex == "Мужчина" or settings.player_info.sex == "Неизвестно" then
 			gunOff[id] = 'убрал'
-		elseif sex == "Женщина" then
+		elseif settings.player_info.sex == "Женщина" then
 			gunOff[id] = 'убралa'
 		end
 	end
-
-	-- Присвоение частей оружия
 	if id > 0 then
 		gunPartOn[id] = rpTakeNames[rpTake[id]][1]
 		gunPartOff[id] = rpTakeNames[rpTake[id]][2]
 	end
 end
-
 function getNameOfARZVehicleModel(id)
 	if doesFileExist(path_arzvehicles) then
 		if #arzvehicles ~= 0 then
@@ -2738,88 +2736,81 @@ function getARZServerName(number)
 	return server
 end
 
-local path = configDirectory .. "/Update_Info.json"
-local url =
-'https://raw.githubusercontent.com/Alexandr-Botovod/Prison_Helper/refs/heads/main/PrisonHelper/Update_info.json'
-
 function check_update()
 	print('[Prison Helper] Начинаю проверку на наличие обновлений...')
 	sampAddChatMessage('[Prison Helper] {ffffff}Начинаю проверку на наличие обновлений...', message_color)
-	os.remove(path) -- Удаляем старый файл
-
-	local function onDownloadComplete(success)
-		if success then
-			print("[Prison Helper] Загрузка завершена. Проверяю файл...")
-			local updateInfo = readJsonFile(path)
-			if updateInfo then
-				local uVer = updateInfo.current_version
-				local uUrl = updateInfo.update_url
-				local uText = updateInfo.update_info
-				print("[Prison Helper] Текущая установленная версия:", thisScript().version)
-				print("[Prison Helper] Текущая версия в облаке:", uVer)
-				if thisScript().version ~= uVer then
-					print('[Prison Helper] Доступно обновление!')
-					sampAddChatMessage('[Prison Helper] {ffffff}Доступно обновление!', message_color)
-					need_update_helper = true
-					updateUrl = uUrl
-					updateVer = uVer
-					updateInfoText = uText
-					UpdateWindow[0] = true
-				else
-					print('[Prison Helper] Обновление не нужно!')
-					sampAddChatMessage('[Prison Helper] {ffffff}Обновление не нужно, у вас актуальная версия!',
-						message_color)
-				end
-			else
-				print("[Prison Helper] Ошибка: Не удалось обработать JSON файл.")
-			end
-		else
-			print("[Prison Helper] Ошибка: Не удалось загрузить файл.")
-			sampAddChatMessage('[Prison Helper] {ffffff}Не удалось загрузить файл обновлений.', message_color)
-		end
-	end
-
+	local path = configDirectory .. "/Update_Info.json"
+	os.remove(path)
+	local url =
+	'https://raw.githubusercontent.com/Alexandr-Botovod/Prison_Helper/refs/heads/main/PrisonHelper/Update_info.json'
 	if isMonetLoader() then
 		downloadToFile(url, path, function(type, pos, total_size)
 			if type == "finished" then
-				onDownloadComplete(true)
-			elseif type == "error" then
-				onDownloadComplete(false)
+				local updateInfo = readJsonFile(path)
+				if updateInfo then
+					local uVer = updateInfo.current_version
+					local uUrl = updateInfo.update_url
+					local uText = updateInfo.update_info
+					print("[Prison Helper] Текущая установленная версия:", thisScript().version)
+					print("[Prison Helper] Текущая версия в облаке:", uVer)
+					if thisScript().version ~= uVer then
+						print('[Prison Helper] Доступно обновление!')
+						sampAddChatMessage('[Prison Helper] {ffffff}Доступно обновление!', message_color)
+						need_update_helper = true
+						updateUrl = uUrl
+						updateVer = uVer
+						updateInfoText = uText
+						UpdateWindow[0] = true
+					else
+						print('[Prison Helper] Обновление не нужно!')
+						sampAddChatMessage('[Prison Helper] {ffffff}Обновление не нужно, у вас актуальная версия!',
+							message_color)
+					end
+				end
 			end
 		end)
 	else
 		downloadUrlToFile(url, path, function(id, status)
 			if status == 6 then -- ENDDOWNLOADDATA
-				onDownloadComplete(true)
-			else
-				onDownloadComplete(false)
+				local updateInfo = readJsonFile(path)
+				if updateInfo then
+					local uVer = updateInfo.current_version
+					local uUrl = updateInfo.update_url
+					local uText = updateInfo.update_info
+					print("[Prison Helper] Текущая установленная версия:", thisScript().version)
+					print("[Prison Helper] Текущая версия в облаке:", uVer)
+					if thisScript().version ~= uVer then
+						print('[Prison Helper] Доступно обновление!')
+						sampAddChatMessage('[Prison Helper] {ffffff}Доступно обновление!', message_color)
+						need_update_helper = true
+						updateUrl = uUrl
+						updateVer = uVer
+						updateInfoText = uText
+						UpdateWindow[0] = true
+					else
+						print('[Prison Helper] Обновление не нужно!')
+						sampAddChatMessage('[Prison Helper] {ffffff}Обновление не нужно, у вас актуальная версия!',
+							message_color)
+					end
+				end
 			end
 		end)
 	end
-end
-
-function readJsonFile(filePath)
-	if not doesFileExist(filePath) then
-		print("[Prison Helper] Ошибка: Файл " .. filePath .. " не существует")
-		return nil
+	function readJsonFile(filePath)
+		if not doesFileExist(filePath) then
+			print("[Prison Helper] Ошибка: Файл " .. filePath .. " не существует")
+			return nil
+		end
+		local file = io.open(filePath, "r")
+		local content = file:read("*a")
+		file:close()
+		local jsonData = decodeJson(content)
+		if not jsonData then
+			print("[Prison Helper] Ошибка: Неверный формат JSON в файле " .. filePath)
+			return nil
+		end
+		return jsonData
 	end
-	local file = io.open(filePath, "r")
-	if not file then
-		print("[Prison Helper] Ошибка: Не удалось открыть файл " .. filePath)
-		return nil
-	end
-	local content = file:read("*a")
-	file:close()
-	if content == "" then
-		print("[Prison Helper] Ошибка: Файл пуст.")
-		return nil
-	end
-	local success, jsonData = pcall(function() return decodeJson(content) end)
-	if not success then
-		print("[Prison Helper] Ошибка: Неверный формат JSON в файле " .. filePath)
-		return nil
-	end
-	return jsonData
 end
 
 function downloadToFile(url, path, callback, progressInterval)
@@ -2964,39 +2955,6 @@ function downloadFileFromUrlToPath(url, path)
 		end)
 	end
 end
-
-local cjson = require("cjson") -- Подключаем библиотеку
-
--- Функция чтения файла
-local function readFile(fileName)
-	local file = io.open(fileName, "r") -- Открываем файл в режиме чтения
-	if not file then
-		print("Не удалось открыть файл: " .. fileName)
-		return nil
-	end
-	local content = file:read("*a") -- Читаем всё содержимое файла
-	file:close()
-	return content
-end
-
--- Загружаем JSON
-local jsonContent = readFile(path)
-if not jsonContent then
-	print("Ошибка: JSON-файл не найден или пуст.")
-end
-
--- Декодируем JSON в таблицу Lua
-local data
-local success, err = pcall(function()
-	data = cjson.decode(jsonContent)
-end)
-if not success then
-	print("Ошибка при декодировании JSON: " .. err)
-	return
-end
-
--- Извлечение массивов новостей
-local newsArray = data.news -- Основной массив новостей
 
 function sampev.onShowTextDraw(id, data)
 	if data.text:find('~n~~n~~n~~n~~n~~n~~n~~n~~w~Style: ~r~Sport!') then
@@ -4149,9 +4107,8 @@ imgui.OnFrame(
 									waiting =
 									'3.500'
 								}
-								-- При переключении на вкладку 5+
+								binder_create_command_9_10 = false
 								binder_create_command_5_8 = true
-								binder_create_command_9_10 = false -- сбрасываем другие флаги
 								table.insert(commands.commands_senior_staff, new_cmd)
 								change_description = new_cmd.description
 								input_description = imgui.new.char[256](u8(change_description))
@@ -4467,33 +4424,6 @@ imgui.OnFrame(
 				end
 				imgui.EndTabItem()
 			end
-
-			if imgui.BeginTabItem(fa.PLAY .. u8 'Обновления') then
-				if imgui.BeginChild('##1', imgui.ImVec2(680 * MONET_DPI_SCALE, 466 * MONET_DPI_SCALE), true) then
-					imgui.CenterText(fa.USER_NURSE .. u8 ' Список обновлений')
-					imgui.Separator()
-
-
-					if imgui.CollapsingHeader(u8 ' Обновление 1') then
-						imgui.Text(u8 'Обновление тест 1')
-					end
-
-					local specificNews = newsArray[2] -- Второй элемент массива.
-					if specificNews then
-						print("Заголовок: " .. tostring(specificNews.title))
-						print("Дата: " .. tostring(specificNews.date))
-						print("Текст:")
-						for _, line in ipairs(specificNews.text) do
-							print("- " .. tostring(line))
-						end
-					else
-						print("Указанный массив новостей отсутствует")
-					end
-				end
-				imgui.EndChild()
-				imgui.EndTabItem() -- Завершаем вкладку
-			end
-
 			if imgui.BeginTabItem(fa.PLAY .. u8 ' Функции') then
 				if imgui.BeginChild('##1', imgui.ImVec2(689 * MONET_DPI_SCALE, 195 * MONET_DPI_SCALE), true) then -- Размеры первой вкладки
 					imgui.CenterText(fa.USER_NURSE .. u8 ' Настройки работы')
@@ -4617,7 +4547,7 @@ imgui.OnFrame(
 					imgui.NextColumn()
 					imgui.CenterColumnText(tostring(settings.player_organization.postavki_materials))
 					imgui.NextColumn()
-					if imgui.CenterColumnSmallButton(u8 "Обновить##postavkimaterials") then
+					if imgui.CenterColumnSmallButton(u8 "Обновить##materials") then
 						check_jobs = true
 						sampSendChat('/jobprogress')
 					end
@@ -4633,7 +4563,7 @@ imgui.OnFrame(
 					imgui.NextColumn()
 					imgui.CenterColumnText(tostring(settings.player_organization.postavki_kargobob))
 					imgui.NextColumn()
-					if imgui.CenterColumnSmallButton(u8 "Обновить##postavkikargobob") then
+					if imgui.CenterColumnSmallButton(u8 "Обновить##materials") then
 						check_jobs = true
 						sampSendChat('/jobprogress')
 					end
@@ -5584,15 +5514,23 @@ imgui.OnFrame(
 				local new_text = u8:decode(ffi.string(input_text)):gsub('\n', '&')
 				local temp_array = {}
 
+				-- Проверяем значение binder_create_command_9_10
 				if binder_create_command_9_10 then
+					-- print("тест 1: binder_create_command_9_10 TRUE")
 					temp_array = commands.commands_manage
+					binder_create_command_9_10 = false -- Сбрасываем флаг
 				elseif binder_create_command_5_8 then
+					-- print("тест 2: binder_create_command_5_8 TRUE")
 					temp_array = commands.commands_senior_staff
+					binder_create_command_5_8 = false -- Сбрасываем флаг
 				else
+					-- Если оба флага ложны, устанавливаем temp_array в commands.commands
+					-- print("тест 3: binder_create_command_9_10 FALSE, temp_array = commands.commands")
 					temp_array = commands.commands
 				end
 
-				for i, command in ipairs(temp_array) do
+				for _, command in ipairs(temp_array) do
+					-- print("Command:", command.cmd, "Description:", command.description, "Text:", command.text)
 					if command.cmd == change_cmd and command.description == change_description and command.arg == change_arg and command.text:gsub('&', '\n') == change_text then
 						command.cmd = new_command
 						command.arg = new_arg
@@ -6624,48 +6562,18 @@ function ColorAccentsAdapter(color)
 	return ret
 end
 
--- Функция для отслеживания изменений оружия
-function trackWeaponChanges()
-	local oldGun, nowGun = 0, 0
-
-	while true do
-		wait(0)
-
-		-- Если оружие изменилось
-		if nowGun ~= getCurrentCharWeapon(PLAYER_PED) and settings.general.rp_gun then
-			oldGun = nowGun
-			nowGun = getCurrentCharWeapon(PLAYER_PED)
-
-			-- Отправка сообщения в чат при изменении оружия
-			if oldGun == 0 then
-				sampSendChat("/me " .. gunOn[nowGun] .. " " .. weapons.get_name(nowGun) .. " " .. gunPartOn[nowGun])
-			elseif nowGun == 0 then
-				sampSendChat("/me " .. gunOff[oldGun] .. " " .. weapons.get_name(oldGun) .. " " .. gunPartOff[oldGun])
-			else
-				sampSendChat("/me " .. gunOff[oldGun] .. " " .. weapons.get_name(oldGun) .. " " .. gunPartOff[oldGun] ..
-					", после чего " .. gunOn[nowGun] .. " " .. weapons.get_name(nowGun) .. " " .. gunPartOn[nowGun])
-			end
-		end
-	end
-end
-
--- Основная функция
 function main()
 	if not isSampLoaded() or not isSampfuncsLoaded() then return end
-	while not isSampAvailable() do wait(100) end -- Оптимизация цикла ожидания
+	while not isSampAvailable() do wait(0) end
 
 	welcome_message()
 	initialize_commands()
-
-	-- Проверка на наличие данных игрока
 	if settings.player_info.name_surname == '' or settings.player_info.fraction == 'Неизвестно' then
 		sampAddChatMessage('[Justice Helper] {ffffff}Пытаюсь получить ваш /stats поскольку остуствуют данные про вас!',
 			message_color)
 		check_stats = true
 		sampSendChat('/stats')
 	end
-
-	-- Открытие различных окон в зависимости от настроек
 	if settings.general.use_info_menu then
 		InformationWindow[0] = true
 	end
@@ -6676,23 +6584,51 @@ function main()
 		MegafonWindow[0] = true
 	end
 
-	-- Проверка обновлений
 	local result, check = pcall(check_update)
 	if not result then
 		sampAddChatMessage('[Justice Helper] {ffffff}Произошла ошибка при попытке проверить наличие обновлений!',
 			message_color)
 	end
 
-	-- Вызов функции отслеживания изменений оружия
-	trackWeaponChanges()
 
-	-- Уведомление о PAYDAY
-	local currentMinute = os.date("%M", os.time())
-	if (currentMinute == "55" or currentMinute == "25") and settings.general.auto_notify_payday and getARZServerNumber() ~= '200' then
-		sampAddChatMessage(
-			'[Justice Helper] {ffffff}Через 5 минут будет PAYDAY. Наденьте форму чтобы не пропустить зарплату!',
-			message_color)
-		wait(1000) -- Добавляем задержку перед следующим уведомлением
+
+	while true do
+		wait(0)
+
+		if isMonetLoader() then
+			if settings.general.mobile_fastmenu_button then
+				if tonumber(#get_players()) > 0 and not FastMenu[0] and not FastMenuPlayers[0] then
+					FastMenuButton[0] = true
+				else
+					FastMenuButton[0] = false
+				end
+			end
+		end
+
+		if nowGun ~= getCurrentCharWeapon(PLAYER_PED) and settings.general.rp_gun then
+			oldGun = nowGun
+			nowGun = getCurrentCharWeapon(PLAYER_PED)
+			if oldGun == 0 then
+				sampSendChat("/me " .. gunOn[nowGun] .. " " .. weapons.get_name(nowGun) .. " " .. gunPartOn[nowGun])
+			elseif nowGun == 0 then
+				sampSendChat("/me " .. gunOff[oldGun] .. " " .. weapons.get_name(oldGun) .. " " .. gunPartOff[oldGun])
+			else
+				sampSendChat("/me " ..
+					gunOff[oldGun] ..
+					" " ..
+					weapons.get_name(oldGun) ..
+					" " ..
+					gunPartOff[oldGun] ..
+					", после чего " .. gunOn[nowGun] .. " " .. weapons.get_name(nowGun) .. " " .. gunPartOn[nowGun])
+			end
+		end
+
+		if ((os.date("%M", os.time()) == "55" and os.date("%S", os.time()) == "00") or (os.date("%M", os.time()) == "25" and os.date("%S", os.time()) == "00")) and settings.general.auto_notify_payday and getARZServerNumber() ~= '200' then
+			sampAddChatMessage(
+				'[Justice Helper] {ffffff}Через 5 минут будет PAYDAY. Наденьте форму чтобы не пропустить зарплату!',
+				message_color)
+			wait(1000)
+		end
 	end
 end
 
