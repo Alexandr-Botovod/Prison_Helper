@@ -3,7 +3,7 @@
 script_name("Prison Helper")
 script_description('Скрипт для Тюрьмы Строгого Режима LV')
 script_author("MTG MODS")
-script_version("0.3.11.0")
+script_version("0.3.11.1")
 
 require('lib.moonloader')
 require('encoding').default = 'CP1251'
@@ -2983,7 +2983,6 @@ end
 local jsonContent = readFile(path)
 if not jsonContent then
 	print("Ошибка: JSON-файл не найден или пуст.")
-	return
 end
 
 -- Декодируем JSON в таблицу Lua
