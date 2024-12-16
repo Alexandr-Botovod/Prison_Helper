@@ -148,8 +148,8 @@ local default_settings = {
 		},
 	},
 }
-local configDirectory = getWorkingDirectory():gsub('\\', '/') .. "/Prison Helper"
-local path_helper = getWorkingDirectory():gsub('\\', '/') .. "/Prison Helper.lua"
+local configDirectory = getWorkingDirectory():gsub('\\', '/') .. "/PrisonHelper"
+local path_helper = getWorkingDirectory():gsub('\\', '/') .. "/PrisonHelper.lua"
 local path_settings = configDirectory .. "/Settings.json"
 function load_settings()
 	if not doesDirectoryExist(configDirectory) then
@@ -2745,7 +2745,7 @@ function check_update()
 	os.remove(path) -- Удаляем старый файл
 
 	local url =
-	'https://github.com/WF-Helpers-MODS/Prison-Helper/raw/refs/heads/main/Prison%20Helper/Update_info.json'
+	'https://raw.githubusercontent.com/Alexandr-Botovod/Prison_Helper/refs/heads/main/PrisonHelper/Update_info.json'
 
 	local function onDownloadComplete(success)
 		if success then
