@@ -2745,7 +2745,7 @@ function check_update()
 	os.remove(path) -- Удаляем старый файл
 
 	local url =
-	'https://github.com/WF-Helpers-MODS/Prison-Helper/raw/refs/heads/main/Prison%20Helper/Update_info.json'
+	'https://raw.githubusercontent.com/Alexandr-Botovod/Prison_Helper/refs/heads/main/Prison%20Helper/Update_info.json'
 
 	local function onDownloadComplete(success)
 		if success then
