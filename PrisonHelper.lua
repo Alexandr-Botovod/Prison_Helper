@@ -2772,7 +2772,7 @@ function check_update()
 	else
 		downloadUrlToFile(url, path, function(id, status)
 			if status == 6 then -- ENDDOWNLOADDATA
-				local updateInfo = readJsonFile(path)
+				updateInfo = readJsonFile(path)
 				if updateInfo then
 					local uVer = updateInfo.current_version
 					local uUrl = updateInfo.update_url
@@ -2801,14 +2801,22 @@ function check_update()
 			print("[Prison Helper] Ошибка: Файл " .. filePath .. " не существует")
 			return nil
 		end
-		local file = io.open(filePath, "r")
+
+		local file, err = io.open(filePath, "r")
+		if not file then
+			print("[Prison Helper] Ошибка при открытии файла " .. filePath .. ": " .. err)
+			return nil
+		end
+
 		local content = file:read("*a")
 		file:close()
+
 		local jsonData = decodeJson(content)
 		if not jsonData then
 			print("[Prison Helper] Ошибка: Неверный формат JSON в файле " .. filePath)
 			return nil
 		end
+
 		return jsonData
 	end
 end
@@ -3523,7 +3531,7 @@ imgui.OnFrame(
 			imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove)
 		if imgui.BeginTabBar('пон') then
 			if imgui.BeginTabItem(fa.HOUSE .. u8 ' Главное меню') then
-				if imgui.BeginChild('##1', imgui.ImVec2(689 * MONET_DPI_SCALE, 195 * MONET_DPI_SCALE), true) then -- Размеры первой вкладки
+				if imgui.BeginChild('##1', imgui.ImVec2(688 * MONET_DPI_SCALE, 194 * MONET_DPI_SCALE), true) then -- Размеры первой вкладки
 					imgui.CenterText(fa.USER_NURSE .. u8 ' Информация про сотрудника')
 					imgui.Separator()
 					imgui.Columns(3)
@@ -3661,7 +3669,7 @@ imgui.OnFrame(
 
 					imgui.EndChild()
 				end
-				if imgui.BeginChild('##3', imgui.ImVec2(689 * MONET_DPI_SCALE, 170 * MONET_DPI_SCALE), true) then -- Размеры окна "Дополнительные функции хелпера"
+				if imgui.BeginChild('##3', imgui.ImVec2(688 * MONET_DPI_SCALE, 170 * MONET_DPI_SCALE), true) then -- Размеры окна "Дополнительные функции хелпера"
 					imgui.CenterText(fa.SITEMAP .. u8 ' Дополнительные функции хелпера')
 					imgui.Separator()
 					imgui.Columns(3)
@@ -4569,6 +4577,28 @@ imgui.OnFrame(
 					end
 					imgui.Columns(1)
 
+					imgui.EndChild()
+				end
+				imgui.EndTabItem()
+			end
+			if imgui.BeginTabItem(fa.WALLET .. u8 'Обновления') then
+				if imgui.BeginChild('##update', imgui.ImVec2(688 * MONET_DPI_SCALE, 372 * MONET_DPI_SCALE), true) then
+					imgui.CenterText(fa.STAR .. u8 'История обновлений')
+					imgui.Separator()
+
+					local indent = string.rep(" ", 115) -- Создает отступ из 10 пробелов
+
+					-- Второй спойлер
+					if imgui.CollapsingHeader(fa.TAG .. " " .. updateInfo.news[2].title .. indent .. updateInfo.news[2].date) then
+						local text = table.concat(updateInfo.news[2].text, "\n")
+						imgui.Text(text)
+					end
+
+					-- Первый спойлер
+					if imgui.CollapsingHeader(fa.TAG .. " " .. updateInfo.news[1].title .. indent .. updateInfo.news[1].date) then
+						local text = table.concat(updateInfo.news[1].text, "\n")
+						imgui.Text(text)
+					end
 					imgui.EndChild()
 				end
 				imgui.EndTabItem()
