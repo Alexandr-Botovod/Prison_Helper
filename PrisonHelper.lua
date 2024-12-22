@@ -3,7 +3,7 @@
 script_name("Prison Helper")
 script_description('Скрипт для Тюрьмы Строгого Режима LV')
 script_author("MTG MODS")
-script_version("0.3.10.1")
+script_version("0.3.11.1")
 
 require('lib.moonloader')
 require('encoding').default = 'CP1251'
@@ -52,8 +52,13 @@ local default_settings = {
 		fraction_rank_number = 0,
 		sex = 'Неизвестно',
 	},
-	player_organization = {
+	player_organization_general = {
 		use_infojob_menu = false,
+		materials = 0,
+		postavki_kargobob = 0,
+		postavki_materials = 0,
+	},
+	player_organization_now = {
 		materials = 0,
 		postavki_kargobob = 0,
 		postavki_materials = 0,
@@ -309,9 +314,7 @@ local commands = {
 		{ cmd = 'zd', description = 'Привествие игрока', text = 'Здраствуйте {get_ru_nick({arg_id})}&Я {my_ru_nick} - {fraction_rank} {fraction_tag}&Чем я могу Вам помочь?', arg = '{arg_id}', enable = true, waiting = '3.500' },
 		{ cmd = 'take', description = 'Изьятие предметов игрока', text = '/do В подсумке находиться небольшой зип-пакет.&/me достаёт из подсумка зип-пакет и отрывает его&/me кладёт в зип-пакет изьятые предметы задержанного человека&/take {arg_id}&/do Изьятые предметы в зип-пакете.&/todo Отлично*убирая зип-пакет в подсумок', arg = '{arg_id}', enable = true, waiting = '3.500' },
 		{ cmd = 'cure', description = 'Поднять игрока из стадии', text = '/me наклоняется над человеком, и прощупывает его пульс на сонной артерии&/cure {arg_id}&/do Пульс отсутствует.&/me начинает делать человеку непрямой массаж сердца, время от времени проверяя пульс&/do Спустя несколько минут сердце человека началось биться.&/do Человек пришел в сознание.&/todo Отлично*улыбаясь', arg = '{arg_id}', enable = true, waiting = '3.500' },
-		{ cmd = 'carcer', description = 'Посадка в карцер игрока', text = '/do На поясе висит связка ключей.&/me прислонив заключённого к стене, снял ключ со связки, открыл дверцу камеры&/me движениями рук затолкнул заключённого в камеру, после чего закрыл её&/me движениями рук закрепил ключ к связке&/carcer {arg_id} {arg2} {arg3} {arg4}', arg = '{arg_id} {arg2} {arg3} {arg4}', enable = true, waiting = '3.500' },
 		{ cmd = 'uncarcer', description = 'Выпуск из карцера игрока', text = '/do На поясе висит связка ключей.&/me движениями рук снял ключ со связки, открыл камеру и вытолкнул из неё заключённого&/me закрыл дверцу камеры, закрепил ключ к связке&/uncarcer {arg_id}', arg = '{arg_id}', enable = true, waiting = '3.500' },
-		{ cmd = 'setcarcer', description = 'Смена карцера игроку', text = '/do На поясе висит связка ключей.&/me движениями рук снял ключ со связки, открыл свободную камеру и камеру заключённого&/me вытолкнул  заключённого из первой камеры, затолкнул во вторую, закрыв двери обоих камер&/me движениями рук закрепил ключ к связке&/setcarcer {arg_id} {arg2}', arg = '{arg_id}, {arg2}', enable = true, waiting = '3.500' },
 		{ cmd = 'cuff', description = 'Надеть наручники', text = '/do Наручники на тактическом поясе.&/me снимает наручники с пояса и надевает их на задержанного&/cuff {arg_id}&/do Задержанный в наручниках.', arg = '{arg_id}', enable = true, waiting = '3.500' },
 		{ cmd = 'uncuff', description = 'Снять наручники', text = '/do На тактическом поясе прикреплены ключи от наручников.&/me снимает с пояса ключ от наручников и вставляет их в наручники задержанного&/me прокручивает ключ в наручниках и снимает их с задержанного&&/uncuff {arg_id}&/do Наручники сняты с задержанного&/me кладёт ключ и наручники обратно на тактический пояс', arg = '{arg_id}', enable = true, waiting = '3.500' },
 		{ cmd = 'gotome', description = 'Повести за собой', text = '/me схватывает задержанного за руки и ведёт его за собой&/gotome {arg_id}&/do Задержанный идёт в конвое.', arg = '{arg_id}', enable = true, waiting = '3.500' },
@@ -326,8 +329,8 @@ local commands = {
 	commands_senior_staff = {
 		{ cmd = 'rp', description = 'Выдача сотруднику /fractionrp', text = '/fractionrp {arg_id}', arg = '{arg_id}', enable = true, waiting = '3.500' },
 		{
-			cmd = 'punish_raise',
-			description = 'Повысить уровень наказания',
+			cmd = 'punishsu',
+			description = 'Повысить уровень наказания.',
 			text =
 			'/me достаёт свой КПК и открывает базу данных преступников&/me вносит изменения в базу данных преступников&/do Преступник занесён в базу данных преступников.&/punish {arg_id} {arg2} 2 {arg3}',
 			arg = '{arg_id} {arg2} {arg3}',
@@ -335,14 +338,32 @@ local commands = {
 			waiting = '3.500'
 		},
 		{
-			cmd = 'punish_lower',
+			cmd = 'punishclear',
 			description = 'Понизить уровень наказания',
 			text =
-			'/me достаёт свой КПК и открывает базу данных преступников&/me вносит изменения в базу данных преступников&/do Преступник занесён в базу данных преступников.&/punish {arg_id} {arg2} 1 {arg3}',
+			'/me достаёт блокнот из нагрудного кармана&/do Блокнот в руке.&/me открывает его на странице с записями о поведении заключённых.&/do В блокноте видна запись: "{get_rp_nick({arg_id})}, примерное поведение...&/do ...участие в уборке территории, отсутствие нарушений."&/me берёт ручку и записывает новую информацию о заключённом.&/do В блокноте добавлена запись: "Рекомендация на сокращение срока...&/do ...на 3 месяца за добросовестное выполнение обязанностей."&/me закрывает блокнот и убирает его обратно в карман формы.&/do Данные о заключённом зафиксированы...&/do ...для последующего рассмотрения администрацией.',
 			arg = '{arg_id} {arg2} {arg3}',
 			enable = true,
 			waiting = '3.500'
-		}
+		},
+		{
+			cmd = 'carcer',
+			description = 'Посадка в карцер игрока',
+			text =
+			'/do На поясе висит связка ключей.&/me прислонив заключённого к стене, снял ключ со связки, открыл дверцу камеры&/me движениями рук затолкнул заключённого в камеру, после чего закрыл её&/me движениями рук закрепил ключ к связке&/carcer {arg_id} {arg2} {arg3} {arg4}',
+			arg = '{arg_id} {arg2} {arg3} {arg4}',
+			enable = true,
+			waiting = '3.500'
+		},
+		{
+			cmd = 'setcarcer',
+			description = 'Смена карцера игроку',
+			text =
+			'/do На поясе висит связка ключей.&/me движениями рук снял ключ со связки, открыл свободную камеру и камеру заключённого&/me вытолкнул заключённого из первой камеры, затолкнул во вторую, закрыв двери обоих камер&/me движениями рук закрепил ключ к связке&/setcarcer {arg_id} {arg2}',
+			arg = '{arg_id}, {arg2}',
+			enable = true,
+			waiting = '3.500'
+		},
 	},
 	commands_manage = {
 		{ cmd = 'inv', description = 'Принятие игрока в фракцию', text = '/do В кармане есть связка с ключами от раздевалки.&/me достаёт из кармана один ключ из связки ключей от раздевалки&/todo Возьмите, это ключ от нашей раздевалки*передавая ключ человеку напротив&/invite {arg_id}', arg = '{arg_id}', enable = true, waiting = '3.500' },
@@ -355,6 +376,24 @@ local commands = {
 		{ cmd = 'unvig', description = 'Снятие выговора cотруднику', text = '/me достаёт из кармана свой телефон и заходит в базу данных {fraction_tag}&/me изменяет информацию о сотруднике {get_ru_nick({arg_id})} в базе данных {fraction_tag}&/me выходит с базы данных и убирает телефон обратно в карман&/unfwarn {arg_id}&/r Сотруднику {get_ru_nick({arg_id})} был снят выговор!', arg = '{arg_id}', enable = true, waiting = '3.500' },
 		{ cmd = 'unv', description = 'Увольнение игрока из фракции', text = '/me достаёт из кармана свой телефон и заходит в базу данных {fraction_tag}&/me изменяет информацию о сотруднике {get_ru_nick({arg_id})} в базе данных {fraction_tag}&/me выходит с базы данных и убирает свой телефон обратно в карман&/uninvite {arg_id} {arg2}&/r Сотрудник {get_ru_nick({arg_id})} был уволен по причине: {arg2}', arg = '{arg_id} {arg2}', enable = true, waiting = '3.500' },
 		{ cmd = 'point', description = 'Установить метку для сотрудников', text = '/r Срочно выдвигайтесь ко мне, отправляю вам координаты...&/point', arg = '', enable = true, waiting = '3.500' },
+		{
+			cmd = 'unpunish',
+			description = 'Выпуск заключённых из ТСР',
+			text =
+			'/me движениями рук берёт дело заключённого с полки, кладёт его на стол&/do На столе лежит ручка и печать.&/me движением правой руки берёт ручку, заполняет поле в деле заключённого&/me движениями рук кладёт ручку на стол, берёт печать и ставит её в деле&/me движениями рук ставит печать на стол, после чего закрывает дело&Ваш срок укорочен, возвращайтесь в камеру и ожидайте ...&... транспортировки до ближайшего населённого пункта.&/unpunish {arg_id} {arg1}',
+			arg = '{arg_id} {arg1}',
+			enable = true,
+			waiting = '3.500'
+		},
+		{
+			cmd = 'rjailreklama',
+			description = 'Реклама УДО',
+			text =
+			'/rjail Доброго времени суток заключение.&/rjail В данный момент Вы можете покинуть тюрьму досрочно, через кабинет начальства тюрьмы.&/rjail По УДО будет отказано людям, попавшим сюда по следующим причинам:&/rjail По статьям: 3.5 УК. За любое проявление расизма и национализма, ...&/rjail 5.1 УК. За совершение или планирование терроризма, ...&/rjail 3.1 УК. За похищение гражданина/группы граждан и удержание их в заложниках, ...&/rjail 5.6 УК. За соучастие в захватах, подрывах ...&/rjail ... а также при попадании в тюрьму по решению сената.&/rjail Спасибо за внимание.',
+			arg = '',
+			enable = true,
+			waiting = '3.500'
+		}
 	}
 }
 
@@ -3171,16 +3210,13 @@ function sampev.onServerMessage(color, text)
 		sampAddChatMessage('[Prison Helper] {ffffff}Вы сняли маску!', message_color)
 		return false
 	end
-	if text:find("{BE2D2D} Используйте: /jobprogress [ ID игрока ]") or text:find("Используйте: /jobprogress [ ID игрока ]") then
-		return false
-	end
 	if text:find("Вы уже изготовили: {DC4747}(%d+){FFFFFF} материалов") then
 		local material = text:match("Вы уже изготовили: {DC4747}(%d+){FFFFFF} материалов")
 		if material then
-			local currentAmount = tonumber(material)          -- Преобразуем строку в число
-			currentAmount = settings.player_organization.materials + 1 -- Прибавляем 1 материал
+			local currentAmount = tonumber(material)                  -- Преобразуем строку в число
+			currentAmount = settings.player_organization_general.materials + 1 -- Прибавляем 1 материал
 
-			settings.player_organization.materials = currentAmount
+			settings.player_organization_general.materials = currentAmount
 			return true
 		end
 	end
@@ -3348,16 +3384,46 @@ function sampev.onShowDialog(dialogid, style, title, button1, button2, text)
 
 	if title:find('Успеваемость') and check_jobs then -- получение рабочей статистики
 		if text:find("2%) Сделанных патронов на складе: {FFB323}(%d+){FFFFFF}") then
-			settings.player_organization.materials = text:match(
+			settings.player_organization_general.materials = text:match(
 				"2%) Сделанных патронов на складе: {FFB323}(%d+){FFFFFF}")
 		end
 		if text:find("3%) Доставленных в ПД фур: {FFB323}(%d+){FFFFFF}") then
-			settings.player_organization.postavki_materials = text:match(
+			settings.player_organization_general.postavki_materials = text:match(
 				"3%) Доставленных в ПД фур: {FFB323}(%d+){FFFFFF}")
 		end
 		if text:find("5%) Доставленных вертолётов с материалами: {FFB323}(%d+){FFFFFF}") then
-			settings.player_organization.postavki_kargobob = text:match(
+			settings.player_organization_general.postavki_kargobob = text:match(
 				"5%) Доставленных вертолётов с материалами: {FFB323}(%d+){FFFFFF}")
+		end
+		-- Извлекаем данные после "Статистика успеваемости за сегодня:"
+		local start_pos, end_pos = text:find("Статистика успеваемости за сегодня:")
+
+		if start_pos then
+			-- Получаем подстроку после подзаголовка
+			local today_stats = text:sub(end_pos + 1)
+
+			-- Извлекаем данные по каждому из пунктов
+			local materials = today_stats:match("2%) Сделанных патронов на складе: {F9FF23}(%d+){FFFFFF}")
+			local trucks = today_stats:match("3%) Доставленных в ПД фур: {F9FF23}(%d+){FFFFFF}")
+			local helicopters = today_stats:match("5%) Доставленных вертолётов с материалами: {F9FF23}(%d+){FFFFFF}")
+
+			-- Сохраняем в настройки, если значения найдены
+			if materials then
+				settings.player_organization_now.materials = materials
+			end
+			if trucks then
+				settings.player_organization_now.postavki_kargobob = trucks
+			end
+			if helicopters then
+				settings.player_organization_now.postavki_materials = helicopters
+			end
+
+			-- Печатаем значения для проверки
+			print("Сделанных патронов на складе:", materials)
+			print("Доставленных в ПД фур:", trucks)
+			print("Доставленных вертолётов с материалами:", helicopters)
+		else
+			print("Подзаголовок 'Статистика успеваемости за сегодня:' не найден.")
 		end
 		save_settings()
 		sampSendDialogResponse(0, 0, 0, 0)
@@ -3970,10 +4036,10 @@ imgui.OnFrame(
 								arg = '',
 								enable = true,
 								waiting =
-								'3.500'
+								'3.5'
 							}
-							binder_create_command_9_10 = false
 							binder_create_command_5_8 = false
+							binder_create_command_9_10 = false
 							table.insert(commands.commands, new_cmd)
 							change_description = new_cmd.description
 							input_description = imgui.new.char[256](u8(change_description))
@@ -3983,8 +4049,8 @@ imgui.OnFrame(
 							input_cmd = imgui.new.char[256](u8(new_cmd.cmd))
 							change_text = new_cmd.text:gsub('&', '\n')
 							input_text = imgui.new.char[8192](u8(change_text))
-							change_waiting = 1.200
-							waiting_slider = imgui.new.float(1.200)
+							change_waiting = 3.0
+							waiting_slider = imgui.new.float(3.0)
 							BinderWindow[0] = true
 						end
 						imgui.EndTabItem()
@@ -4041,7 +4107,7 @@ imgui.OnFrame(
 											command.enable = not command.enable
 											save_commands()
 											register_command(command.cmd, command.arg, command.text,
-												tonumber(command.waiting))
+												command.waiting)
 										end
 										if imgui.IsItemHovered() then
 											imgui.SetTooltip(u8 "Включение команды /" .. command.cmd)
@@ -4071,6 +4137,7 @@ imgui.OnFrame(
 										input_text = imgui.new.char[8192](u8(change_text))
 										change_waiting = command.waiting
 										waiting_slider = imgui.new.float(tonumber(command.waiting))
+										binder_create_command_5_8 = true
 										BinderWindow[0] = true
 									end
 									if imgui.IsItemHovered() then
@@ -4113,10 +4180,10 @@ imgui.OnFrame(
 									arg = '',
 									enable = true,
 									waiting =
-									'3.500'
+									'3.5'
 								}
-								binder_create_command_9_10 = false
 								binder_create_command_5_8 = true
+								binder_create_command_9_10 = false
 								table.insert(commands.commands_senior_staff, new_cmd)
 								change_description = new_cmd.description
 								input_description = imgui.new.char[256](u8(change_description))
@@ -4126,8 +4193,8 @@ imgui.OnFrame(
 								input_cmd = imgui.new.char[256](u8(new_cmd.cmd))
 								change_text = new_cmd.text:gsub('&', '\n')
 								input_text = imgui.new.char[8192](u8(change_text))
-								change_waiting = 1.200
-								waiting_slider = imgui.new.float(1.200)
+								change_waiting = 3.0
+								waiting_slider = imgui.new.float(3.0)
 								BinderWindow[0] = true
 							end
 						else
@@ -4207,7 +4274,7 @@ imgui.OnFrame(
 											command.enable = not command.enable
 											save_commands()
 											register_command(command.cmd, command.arg, command.text,
-												tonumber(command.waiting))
+												command.waiting)
 										end
 										if imgui.IsItemHovered() then
 											imgui.SetTooltip(u8 "Включение команды /" .. command.cmd)
@@ -4238,7 +4305,7 @@ imgui.OnFrame(
 										binder_create_command_9_10 = true
 										binder_create_command_5_8 = false
 										change_waiting = command.waiting
-										waiting_slider = imgui.new.float(tonumber(command.waiting))
+										waiting_slider = imgui.new.float(command.waiting)
 										BinderWindow[0] = true
 									end
 									if imgui.IsItemHovered() then
@@ -4274,8 +4341,6 @@ imgui.OnFrame(
 								imgui.EndChild()
 							end
 							if imgui.Button(fa.CIRCLE_PLUS .. u8 ' Создать новую команду##new_cmd_9-10', imgui.ImVec2(imgui.GetMiddleButtonX(1), 0)) then
-								binder_create_command_9_10 = true
-								binder_create_command_5_8 = false
 								local new_cmd = {
 									cmd = '',
 									description = '',
@@ -4283,8 +4348,9 @@ imgui.OnFrame(
 									arg = '',
 									enable = true,
 									waiting =
-									'3.500'
+									'3.5'
 								}
+								binder_create_command_9_10 = true
 								table.insert(commands.commands_manage, new_cmd)
 								change_description = new_cmd.description
 								input_description = imgui.new.char[256](u8(change_description))
@@ -4294,8 +4360,8 @@ imgui.OnFrame(
 								input_cmd = imgui.new.char[256](u8(new_cmd.cmd))
 								change_text = new_cmd.text:gsub('&', '\n')
 								input_text = imgui.new.char[8192](u8(change_text))
-								change_waiting = 3.500
-								waiting_slider = imgui.new.float(3.500)
+								change_waiting = 3.0
+								waiting_slider = imgui.new.float(3.5)
 								BinderWindow[0] = true
 							end
 						else
@@ -4445,22 +4511,22 @@ imgui.OnFrame(
 					end
 					imgui.SetColumnWidth(-1, 280 * MONET_DPI_SCALE) -- Длина названия пункта
 					imgui.NextColumn()
-					if settings.player_organization.use_infojob_menu then
+					if settings.player_organization_general.use_infojob_menu then
 						imgui.CenterColumnText(u8 'Включено')
 					else
 						imgui.CenterColumnText(u8 'Отключено')
 					end
 					imgui.SetColumnWidth(-1, 300 * MONET_DPI_SCALE) -- Длина описание пункта
 					imgui.NextColumn()
-					if settings.player_organization.use_infojob_menu then
+					if settings.player_organization_general.use_infojob_menu then
 						if imgui.CenterColumnSmallButton(u8 'Отключить##info_menu') then
-							settings.player_organization.use_infojob_menu = false
+							settings.player_organization_general.use_infojob_menu = false
 							JobInformationWindow[0] = false
 							save_settings()
 						end
 					else
 						if imgui.CenterColumnSmallButton(u8 'Включить##info_menu') then
-							settings.player_organization.use_infojob_menu = true
+							settings.player_organization_general.use_infojob_menu = true
 							JobInformationWindow[0] = true
 							save_settings()
 						end
@@ -4537,7 +4603,7 @@ imgui.OnFrame(
 						imgui.SetTooltip(u8 "За всё время количество изготовленных материалов.")
 					end
 					imgui.NextColumn()
-					imgui.CenterColumnText(tostring(settings.player_organization.materials))
+					imgui.CenterColumnText(tostring(settings.player_organization_general.materials))
 					imgui.NextColumn()
 					if imgui.CenterColumnSmallButton(u8 "Обновить##materials") then
 						check_jobs = true
@@ -4553,9 +4619,9 @@ imgui.OnFrame(
 						imgui.SetTooltip(u8 "Статистика выполненных поставок на фуре в МЮ.")
 					end
 					imgui.NextColumn()
-					imgui.CenterColumnText(tostring(settings.player_organization.postavki_materials))
+					imgui.CenterColumnText(tostring(settings.player_organization_general.postavki_materials))
 					imgui.NextColumn()
-					if imgui.CenterColumnSmallButton(u8 "Обновить##materials") then
+					if imgui.CenterColumnSmallButton(u8 "Обновить##postavki_materials") then
 						check_jobs = true
 						sampSendChat('/jobprogress')
 					end
@@ -4569,9 +4635,9 @@ imgui.OnFrame(
 						imgui.SetTooltip(u8 "Статистика выполненных поставок на каргобобе в МО и ТСР.")
 					end
 					imgui.NextColumn()
-					imgui.CenterColumnText(tostring(settings.player_organization.postavki_kargobob))
+					imgui.CenterColumnText(tostring(settings.player_organization_general.postavki_kargobob))
 					imgui.NextColumn()
-					if imgui.CenterColumnSmallButton(u8 "Обновить##materials") then
+					if imgui.CenterColumnSmallButton(u8 "Обновить##postavki_kargobob") then
 						check_jobs = true
 						sampSendChat('/jobprogress')
 					end
@@ -5485,13 +5551,29 @@ imgui.OnFrame(
 		end
 		if imgui.BeginPopupModal(fa.CLOCK .. u8 ' Задержка (в секундах) ', _, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoMove) then
 			imgui.PushItemWidth(200 * MONET_DPI_SCALE)
-			imgui.SliderFloat(u8 '##waiting', waiting_slider, 0.3, 600)
+
+			-- Создание буфера для текстового ввода
+			local buffer = imgui.new.char(64)
+			ffi.copy(buffer, string.format("%.1f", waiting_slider[0]))
+
+			-- Текстовое поле для ввода значения задержки
+			if imgui.InputText(u8 '##waiting', buffer, 64, imgui.InputTextFlags.CharsDecimal) then
+				local new_value = tonumber(ffi.string(buffer))
+				if new_value then
+					waiting_slider[0] = new_value -- Обновляем значение
+				end
+			end
 			imgui.Separator()
 			if imgui.Button(fa.CIRCLE_XMARK .. u8 ' Отмена', imgui.ImVec2(imgui.GetMiddleButtonX(2), 0)) then
-				waiting_slider = imgui.new.float(tonumber(change_waiting))
+				waiting_slider[0] = tonumber(change_waiting) -- Возврат к старому значению
 				imgui.CloseCurrentPopup()
 			end
 			imgui.SameLine()
+			if imgui.Button(fa.CHECK .. u8 ' Принять', imgui.ImVec2(imgui.GetMiddleButtonX(2), 0)) then
+				change_waiting = tostring(waiting_slider[0]) -- Сохраняем новое значение
+				imgui.CloseCurrentPopup()
+			end
+			imgui.EndPopup()
 		end
 		imgui.SameLine()
 		if imgui.Button(fa.TAGS .. u8 ' Тэги (1)', imgui.ImVec2(imgui.GetMiddleButtonX(5), 0)) then
@@ -5546,22 +5628,22 @@ imgui.OnFrame(
 
 				-- Проверяем значение binder_create_command_9_10
 				if binder_create_command_9_10 then
-					-- print("тест 1: binder_create_command_9_10 TRUE")
+					print("Тест 1: binder_create_command_9_10 TRUE")
 					temp_array = commands.commands_manage
-					binder_create_command_9_10 = false -- Сбрасываем флаг
+					binder_create_command_9_10 = false
 				elseif binder_create_command_5_8 then
-					-- print("тест 2: binder_create_command_5_8 TRUE")
+					print("Тест 2: binder_create_command_5_8 TRUE")
 					temp_array = commands.commands_senior_staff
-					binder_create_command_5_8 = false -- Сбрасываем флаг
+					binder_create_command_5_8 = false
 				else
-					-- Если оба флага ложны, устанавливаем temp_array в commands.commands
-					-- print("тест 3: binder_create_command_9_10 FALSE, temp_array = commands.commands")
+					print("Тест 3: binder_create_command false")
 					temp_array = commands.commands
 				end
 
 				for _, command in ipairs(temp_array) do
-					-- print("Command:", command.cmd, "Description:", command.description, "Text:", command.text)
+					print("Command:", command.cmd, "Description:", command.description, "Text:", command.text)
 					if command.cmd == change_cmd and command.description == change_description and command.arg == change_arg and command.text:gsub('&', '\n') == change_text then
+						print("Найдена команда для редактирования")
 						command.cmd = new_command
 						command.arg = new_arg
 						command.description = new_description
@@ -5602,7 +5684,7 @@ imgui.OnFrame(
 								message_color)
 						end
 						sampUnregisterChatCommand(change_cmd)
-						register_command(command.cmd, command.arg, command.text, tonumber(command.waiting))
+						register_command(command.cmd, command.arg, command.text, command.waiting)
 						break
 					end
 				end
@@ -5951,16 +6033,25 @@ imgui.OnFrame(
 imgui.OnFrame(
 	function() return JobInformationWindow[0] end,
 	function(player)
-		imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 8, sizeY / 1.7), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+		imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 8.5, sizeY / 2.1), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
 		imgui.SetNextWindowSize(imgui.ImVec2(225 * MONET_DPI_SCALE, 113 * MONET_DPI_SCALE), imgui.Cond.FirstUseEver)
 		imgui.Begin(fa.BUILDING_SHIELD .. u8 " Prison Helper##info_menu", _,
 			imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoResize + imgui.WindowFlags.AlwaysAutoResize)
 		if not isMonetLoader() and not sampIsChatInputActive() then player.HideCursor = true else player.HideCursor = false end
-		imgui.Text(fa.CITY .. u8(' Материалы: ') .. tostring(settings.player_organization.materials))
+		imgui.CenterText(u8('Общая статистика'))
+		imgui.Separator()
+		imgui.Text(fa.CITY .. u8(' Материалы: ') .. tostring(settings.player_organization_general.materials))
 		imgui.Text(fa.TRUCK ..
-			u8(' Поставки в МЮ: ') .. tostring(settings.player_organization.postavki_materials))
+			u8(' Поставки в МЮ: ') .. tostring(settings.player_organization_general.postavki_materials))
 		imgui.Text(fa.CAR ..
-			u8(' Поставки в МО(ТСР): ') .. tostring(settings.player_organization.postavki_kargobob))
+			u8(' Поставки в МО(ТСР): ') .. tostring(settings.player_organization_general.postavki_kargobob))
+		imgui.Separator()
+		imgui.CenterText(u8('Статистика за сегодня:'))
+		imgui.Separator()
+		imgui.Text(fa.PLAY .. u8(' Материалы: ') .. tostring(settings.player_organization_now.materials))
+		imgui.Text(fa.KEYBOARD .. u8(' Поставки в МЮ: ') .. tostring(settings.player_organization_now.postavki_materials))
+		imgui.Text(fa.MAP_LOCATION_DOT ..
+			u8(' Поставки в МО(ТСР): ') .. tostring(settings.player_organization_now.postavki_kargobob))
 		imgui.Separator()
 		imgui.Text(fa.CLOCK .. u8(' Текущее время: ') .. u8(tagReplacements.get_time()))
 		imgui.End()
@@ -6607,7 +6698,7 @@ function main()
 	if settings.general.use_info_menu then
 		InformationWindow[0] = true
 	end
-	if settings.player_organization.use_infojob_menu then
+	if settings.player_organization_general.use_infojob_menu then
 		JobInformationWindow[0] = true
 	end
 	if settings.general.mobile_meg_button and isMonetLoader() then
