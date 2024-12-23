@@ -1,7 +1,7 @@
 {
   "current_version": "0.3.11.2",
   "update_url": "https://raw.githubusercontent.com/Alexandr-Botovod/Prison_Helper/refs/heads/main/PrisonHelper.lua",
-  "update_info": "v0.3.11.2 - Исправление ссылки на регламент повышения срока заключённы",
+  "update_info": "v0.3.11.2 - Исправление ссылки на регламент повышения срока заключённым",
   "news": [
     {
       "title": "Обновление #0.3.10.0",
