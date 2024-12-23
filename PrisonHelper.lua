@@ -3,7 +3,7 @@
 script_name("Prison Helper")
 script_description('Скрипт для Тюрьмы Строгого Режима LV')
 script_author("MTG MODS")
-script_version("0.3.11.1")
+script_version("0.3.11.2")
 
 require('lib.moonloader')
 require('encoding').default = 'CP1251'
@@ -197,6 +197,8 @@ local post = imgui.new.char[256]()
 
 local script_tag = '[Prison Helper]'
 
+
+-------------------------------------------- Конфигурация ----------------------------------------------
 local configDirectory = getWorkingDirectory():gsub('\\', '/') .. "/PrisonHelper"
 local path_helper = getWorkingDirectory():gsub('\\', '/') .. "/PrisonHelper.lua"
 local path_settings = configDirectory .. "/Settings.json"
@@ -4662,6 +4664,12 @@ imgui.OnFrame(
 
 					local indent = string.rep(" ", 115) -- Создает отступ из 10 пробелов
 
+					-- Четвёртый спойлер
+					if imgui.CollapsingHeader(fa.TAG .. " " .. updateInfo.news[4].title .. indent .. updateInfo.news[4].date) then
+						local text = table.concat(updateInfo.news[4].text, "\n")
+						imgui.Text(text)
+					end
+
 					-- Третий спойлер
 					if imgui.CollapsingHeader(fa.TAG .. " " .. updateInfo.news[3].title .. indent .. updateInfo.news[3].date) then
 						local text = table.concat(updateInfo.news[3].text, "\n")
@@ -4693,7 +4701,7 @@ imgui.OnFrame(
 						if getARZServerNumber() ~= 0 then
 							download_smartRPTP = true
 							downloadFileFromUrlToPath(
-								'https://raw.githubusercontent.com/WF-Helpers-MODS/Prison-Helper/refs/heads/main/Prison%20Helper/' ..
+								'https://raw.githubusercontent.com/Alexandr-Botovod/Prison_Helper/refs/heads/main/PrisonHelper/' ..
 								getARZServerNumber() .. '/SmartRPTP.json', path_rptp) -- Ссылка на файл с регламентом повышения срока заключённым
 							imgui.OpenPopup(fa.CIRCLE_INFO .. u8 ' Prison Helper - Оповещение##donwloadsmartRPTP')
 						else
