@@ -1,8 +1,55 @@
 {
+  "player_info": {
+    "fraction_rank_number": "8",
+    "fraction": "Тюрьма строгого режима LV",
+    "name_surname": "Вильям Райт",
+    "fraction_rank": "Капитан",
+    "fraction_tag": "MSP",
+    "accent": "[Иностранный акцент]:",
+    "sex": "Мужчина"
+  },
+  "player_organization_now": {
+    "postavki_materials": "0",
+    "materials": "99",
+    "postavki_kargobob": "0"
+  },
+  "player_organization_general": {
+    "postavki_materials": "70",
+    "materials": 2445,
+    "use_infojob_menu": false,
+    "postavki_kargobob": "153"
+  },
+  "general": {
+    "rp_chat": true,
+    "version": "0.3.11.2",
+    "use_info_menu": false,
+    "moonmonet_theme_color": 8900331,
+    "bind_command_stop": "[123]",
+    "auto_update_members": false,
+    "auto_uval": false,
+    "post_status": "Стабильно",
+    "accent_enable": true,
+    "rp_gun": false,
+    "auto_notify_port": false,
+    "bind_leader_fastmenu": "[71]",
+    "auto_notify_payday": false,
+    "moonmonet_theme_enable": true,
+    "auto_change_code_siren": false,
+    "bind_fastmenu": "[69]",
+    "mobile_fastmenu_button": true,
+    "mobile_stop_button": true,
+    "use_binds": true,
+    "mobile_meg_button": true,
+    "auto_clicker_situation": true,
+    "auto_mask": false,
+    "use_form_su": false,
+    "bind_mainmenu": "[113]",
+    "auto_doklad": true
+  },
   "deportament": {
     "dep_fm": "-",
-    "dep_tag1": "[ПД]",
-    "dep_tag2": "[Всем]",
+    "dep_tag1": "[MSP]",
+    "dep_tag2": "[LSMC]",
     "dep_tags_en": [
       "[ALL]",
       "skip",
@@ -12,6 +59,7 @@
       "[SFPD]",
       "[LVPD]",
       "[RCSD]",
+      "[LSSD]",
       "[SWAT]",
       "[FBI]",
       "skip",
@@ -81,54 +129,5 @@
     ],
     "dep_tags_custom": {},
     "dep_fms": ["-", "- з.к. -", "- 101.1 FM - "]
-  },
-  "general": {
-    "rp_chat": true,
-    "version": "0.0.1",
-    "use_info_menu": false,
-    "bind_1055": "[101]",
-    "bind_1066": "[102]",
-    "moonmonet_theme_color": 40703,
-    "bind_command_stop": "[123]",
-    "auto_doklad_arrest": false,
-    "auto_uval": false,
-    "moonmonet_theme_enable": true,
-    "accent_enable": true,
-    "rp_gun": false,
-    "auto_notify_port": false,
-    "bind_leader_fastmenu": "[71]",
-    "auto_notify_payday": false,
-    "auto_update_members": false,
-    "auto_change_code_siren": false,
-    "auto_doklad_damage": false,
-    "mobile_fastmenu_button": true,
-    "mobile_stop_button": true,
-    "use_binds": true,
-    "mobile_meg_button": true,
-    "auto_clicker_situation": true,
-    "auto_mask": false,
-    "use_form_su": false,
-    "bind_fastmenu": "[69]",
-    "bind_mainmenu": "[113]"
-  },
-  "player_info": {
-    "fraction_rank_number": "7",
-    "fraction": "Тюрьма строгого режима LV",
-    "name_surname": "Вильям Райт",
-    "fraction_rank": "Начальник инспекции",
-    "fraction_tag": "MSP",
-    "accent": "[Иностранный акцент]:",
-    "sex": "Мужчина"
-  },
-  "player_organization_general": {
-    "use_infojob_menu": false,
-    "materials": 0,
-    "postavki_kargobob": 0,
-    "postavki_materials": 0
-  },
-  "player_organization_now": {
-    "materials": 0,
-    "postavki_kargobob": 0,
-    "postavki_materials": 0
   }
 }
